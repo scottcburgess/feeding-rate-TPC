@@ -1,7 +1,7 @@
-###This code produces Figure 3 in the manuscript: 
-###Powell, JA and  SC Burgess. How modularity and heterotrophy complicate the understanding of the causes of thermal performance curves: the case of feeding rate in a filter feeding animal
-#Code finalized Mar 2024
-#Any comments or error reporting, please contact Jackson Powell. jap16f@fsu.edu
+### This code produces Figure 3 in the manuscript: 
+### Powell, JA and  SC Burgess. How modularity and heterotrophy complicate the understanding of the causes of thermal performance curves: the case of feeding rate in a filter feeding animal
+# Code finalized Mar 2024
+# Any comments or error reporting, please contact Jackson Powell. jacksonpowell129@gmail.com
 
 # R Version 4.3.1 (2023-06-16 ucrt) -- "Beagle Scouts"
 
@@ -16,7 +16,7 @@ dat <- read.csv("Clearance Rate Data.csv")
 phenos <- read.csv("Phenotypic Data.csv")
 
 # Subset for bowls with B. neritina present
-bug <- dat[dat$bugula.present == "Y",]
+bug <- dat[dat$bugula.present == "Y", ]
 
 # Change 'batch' to a factor
 bug$batch <- factor(bug$batch)
@@ -43,8 +43,8 @@ r.z <- aggregate(cbind(regressed.zooids, total.zooids) ~ realized.temp + batch, 
 d.z <- aggregate(cbind(dead.zooids, total.zooids) ~ realized.temp + batch, data = bug, FUN = mean)
 
 # Use expand.grid() to create data frames to be filled with predicted values
-p.b1 <- expand.grid(realized.temp = seq(min(bug[bug$batch==1,]$realized.temp),max(bug[bug$batch==1,]$realized.temp), by =0.1), batch  = 1)
-p.b2 <- expand.grid(realized.temp = seq(min(bug[bug$batch==2,]$realized.temp),max(bug[bug$batch==2,]$realized.temp), by =0.1), batch  = 2)
+p.b1 <- expand.grid(realized.temp = seq(min(bug[bug$batch == 1, ]$realized.temp),max(bug[bug$batch == 1, ]$realized.temp), by = 0.1), batch  = 1)
+p.b2 <- expand.grid(realized.temp = seq(min(bug[bug$batch == 2, ]$realized.temp),max(bug[bug$batch == 2, ]$realized.temp), by = 0.1), batch  = 2)
 
 # Arrange batches in order of increasing realized temperatures 
 p.b1 <- p.b1 %>% arrange(realized.temp)
@@ -53,10 +53,10 @@ p.b2 <- p.b2 %>% arrange(realized.temp)
 # Model selection and predictions
 
 #a) Use glmmTMB() to model relationship between total zooid number and realized temperature with batch as a fixed effect
-tm1 <- glmmTMB(round(total.zooids) ~ poly(realized.temp,1) * batch, family = "nbinom1", data = t.z)
-tm2 <- glmmTMB(round(total.zooids) ~ poly(realized.temp,2) * batch, family = "nbinom1", data = t.z)
-tm3 <- glmmTMB(round(total.zooids) ~ poly(realized.temp,3) * batch, family = "nbinom1", data = t.z)
-tm4 <- glmmTMB(round(total.zooids) ~ poly(realized.temp,4) * batch, family = "nbinom1", data = t.z)
+tm1 <- glmmTMB(round(total.zooids) ~ poly(realized.temp, 1) * batch, family = "nbinom1", data = t.z)
+tm2 <- glmmTMB(round(total.zooids) ~ poly(realized.temp, 2) * batch, family = "nbinom1", data = t.z)
+tm3 <- glmmTMB(round(total.zooids) ~ poly(realized.temp, 3) * batch, family = "nbinom1", data = t.z)
+tm4 <- glmmTMB(round(total.zooids) ~ poly(realized.temp, 4) * batch, family = "nbinom1", data = t.z)
 
 # Use aictab() to identify best fit model by AICc
 aictab(list(tm1,tm2,tm3,tm4)) # Linear model is best fit
@@ -65,15 +65,15 @@ aictab(list(tm1,tm2,tm3,tm4)) # Linear model is best fit
 tm1 <- glmmTMB(round(total.zooids) ~ realized.temp * batch, family = "nbinom1", data = t.z)
 tm1a <- glmmTMB(round(total.zooids) ~ realized.temp + batch, family = "nbinom1", data = t.z)
 tm1b <- glmmTMB(round(total.zooids) ~ realized.temp, family = "nbinom1", data = t.z)
+tm1c <- glmmTMB(round(total.zooids) ~ batch, family = "nbinom1", data = t.z)
 
-anova(tm1,tm1a) # No interactive effect between batch and temperature on colony size (X2 = 2.138, df = 1, p = 0.145)
-anova(tm1a,tm1b) # No difference in colony size between batches (X2 = 0.121, df = 1, p = 0.728)
-tm1c <- glmmTMB(round(total.zooids) ~ 1, family = "nbinom1", data = t.z)
-anova(tm1b,tm1c) # No difference in size of colonies placed into each temperature (X2 = 2.138, df = 1, p = 0.144)
+anova(tm1, tm1a) # No interactive effect between batch and temperature on colony size (χ2 = 2.981, df = 1, p = 0.148)
+anova(tm1a, tm1b) # No difference in colony size between batches (χ2 = 0.12, df = 1, p = 0.729)
+anova(tm1a, tm1c) # No difference in size of colonies placed into each temperature (χ2 = 2.186, df = 1, p = 0.139)
 
 # Use predict() with best fit model to predict total zooid number as a function of temperature
-p.t <- rbind(p.b1,p.b2)
-preds.t <- predict(tm1b, newdata = p.t, se.fit = TRUE)
+p.t <- rbind(p.b1, p.b2)
+preds.t <- predict(tm1a, newdata = p.t, se.fit = TRUE)
 p.t$fit <- preds.t$fit
 p.t$se.fit <- preds.t$se.fit
 
@@ -94,23 +94,24 @@ fm3 <- glmmTMB(cbind(round(feeding.zooids), round(total.zooids) - round(feeding.
 fm4 <- glmmTMB(cbind(round(feeding.zooids), round(total.zooids) - round(feeding.zooids)) ~ poly(realized.temp,4) * batch, family = "binomial", data = f.z)
 
 # Use aictab() to identify best fit model by AICc
-aictab(list(fm1,fm2,fm3,fm4))
+aictab(list(fm1, fm2, fm3, fm4)) # Linear model is best fit 
 
 # Test for effects of batch and temperature based on fm1
 fm1 <- glmmTMB(cbind(round(feeding.zooids), round(total.zooids) - round(feeding.zooids)) ~ realized.temp * batch, family = "binomial", data = f.z)
 fm1a <- glmmTMB(cbind(round(feeding.zooids), round(total.zooids) - round(feeding.zooids)) ~ realized.temp + batch, family = "binomial", data = f.z)
 fm1b <- glmmTMB(cbind(round(feeding.zooids), round(total.zooids) - round(feeding.zooids)) ~ realized.temp, family = "binomial", data = f.z)
+fm1c <- glmmTMB(cbind(round(feeding.zooids), round(total.zooids) - round(feeding.zooids)) ~ batch, family = "binomial", data = f.z)
 
-anova(fm1,fm1a) # Significant interactive effect between batch and temperature for the proportion of feeding zooids (X2 = 4.32, df =1, p = 0.038)
-fm1c <- glmmTMB(cbind(round(feeding.zooids), round(total.zooids) - round(feeding.zooids)) ~ 1 * batch, family = "binomial", data = f.z)
-anova(fm1,fm1c) # Significant effect of temperature on proportion of feeding zooids (X2 = 64.509, df = 3, p < 0.001)
+anova(fm1, fm1a) # Significant interactive effect between batch and temperature on the proportion of feeding zooids (χ2 = 4.305, df = 1, p = 0.038)
+anova(fm1, fm1b) # Significant interactive effect of batch on the proportion of feeding zooids (χ2 = 33.532, df = 2, p < 0.001)
+anova(fm1, fm1c) # Significant effect of temperature on proportion of feeding zooids (χ2 = 39.408, df = 2, p < 0.001)
  
 # Use confint() to compute confidence intervals for parameters for best fit model
 confint(fm1)
-# Proportion of feeding zooids decreased 0.035 (0.002 – 0.067, 95% CI) per°C faster in batch 1 than batch 2
+# Proportion of feeding zooids decreased 0.035 (0.002 – 0.067, 95% CI) per°C faster in batch 1 than in batch 2
 
 # Use predict() with best fit model to predict proportion of zooids capable of feeding as a function of temperature
-p.f <- rbind(p.b1,p.b2)
+p.f <- rbind(p.b1, p.b2)
 preds.f <- predict(fm1, newdata = p.f, se.fit = TRUE)
 p.f$fit <- preds.f$fit
 p.f$se.fit <- preds.f$se.fit
@@ -131,23 +132,24 @@ rm3 <- glmmTMB(cbind(round(regressed.zooids), round(total.zooids) - round(regres
 rm4 <- glmmTMB(cbind(round(regressed.zooids), round(total.zooids) - round(regressed.zooids)) ~ poly(realized.temp,4) * batch, family = "binomial", data = r.z)
 
 # Use aictab() to identify best fit model by AICc
-aictab(list(rm1,rm2,rm3,rm4)) # Linear model is best fit 
+aictab(list(rm1, rm2, rm3, rm4)) # Linear model is best fit 
 
 # Test for effects of batch and temperature based on rm1
 rm1 <- glmmTMB(cbind(round(regressed.zooids), round(total.zooids) - round(regressed.zooids)) ~ realized.temp * batch, family = "binomial", data = r.z)
 rm1a <- glmmTMB(cbind(round(regressed.zooids), round(total.zooids) - round(regressed.zooids)) ~ realized.temp + batch, family = "binomial", data = r.z)
 rm1b <- glmmTMB(cbind(round(regressed.zooids), round(total.zooids) - round(regressed.zooids)) ~ realized.temp, family = "binomial", data = r.z)
+rm1c <- glmmTMB(cbind(round(regressed.zooids), round(total.zooids) - round(regressed.zooids)) ~ batch, family = "binomial", data = r.z)
 
-anova(rm1,rm1a) # Significant interactive effect between batch and temperature on proportion of regressed zooids (X2 = 4.004, df = 1, p = 0.045)
-rm1c <- glmmTMB(cbind(round(regressed.zooids), round(total.zooids) - round(regressed.zooids)) ~ 1 * batch, family = "binomial", data = r.z)
-anova(rm1,rm1c) # Significant effect of temperature on proportion of regressed zooids (X2 = 62.995, df = 3, p < 0.001)
+anova(rm1, rm1a) # Significant interactive effect between batch and temperature on proportion of regressed zooids (χ2 = 3.99, df = 1, p = 0.046)
+anova(rm1, rm1b) # Significant effect of batch on proportion of regressed zooids (χ2 = 32.399, df = 2, p < 0.001)
+anova(rm1, rm1c) # Significant effect of temperature on proportion of regressed zooids (χ2 = 38.621, df = 2, p < 0.001)
 
 # Use confint() to compute confidence intervals for parameters for best fit model
 confint(rm1)
-# Proportion of regressed zooids increased 0.033 (0.0001 – 0.066, 95% CI) per°C faster in batch 1 than batch 2
+# Proportion of regressed zooids increased 0.033 (0.001 – 0.066, 95% CI) per°C faster in batch 1 than batch 2
 
 # Use predict() with best fit model to predict proportion of zooids regressed as a function of temperature
-p.r <- rbind(p.b1,p.b2)
+p.r <- rbind(p.b1, p.b2)
 preds.r <- predict(rm1, newdata = p.r, se.fit = TRUE)
 p.r$fit <- preds.r$fit
 p.r$se.fit <- preds.r$se.fit
@@ -173,19 +175,19 @@ dm4 <- glmmTMB(cbind(round(dead.zooids), round(total.zooids) - round(dead.zooids
 dm1 <- glmmTMB(cbind(round(dead.zooids), round(total.zooids) - round(dead.zooids)) ~ realized.temp * batch, family = "binomial", data = d.z)
 dm1a <- glmmTMB(cbind(round(dead.zooids), round(total.zooids) - round(dead.zooids)) ~ realized.temp + batch, family = "binomial", data = d.z)
 dm1b <- glmmTMB(cbind(round(dead.zooids), round(total.zooids) - round(dead.zooids)) ~ realized.temp , family = "binomial", data = d.z)
+dm1c <- glmmTMB(cbind(round(dead.zooids), round(total.zooids) - round(dead.zooids)) ~ batch , family = "binomial", data = d.z)
 
-anova(dm1,dm1a) # No interaction between temperature and batch (χ2 = 1.501, df = 1, p = 0.221)
-anova(dm1a,dm1b) # Batches have the same intercept (χ2 = 0, df = 1, p = 0.998)
-dm1c <- glmmTMB(cbind(round(dead.zooids), round(total.zooids) - round(dead.zooids)) ~ 1 , family = "binomial", data = d.z)
-anova(dm1b,dm1c) # Temperature had a significant effect on the number of dead zooids (X2 = 4.944, df = 1, p = 0.026)
+anova(dm1, dm1a) # No interaction between temperature and batch (χ2 = 1.501, df = 1, p = 0.221)
+anova(dm1a, dm1b) # Batches have the same intercept (χ2 = 0, df = 1, p = 0.998)
+anova(dm1a, dm1c) # Temperature had a significant effect on the number of dead zooids (χ2 = 4.942, df = 1, p = 0.026)
 
 # Use confint() to compute confidence intervals for parameters for best fit model
-confint(dm1b)
-# Proportion of dead zooids increased 0.284 (-0.007 – 0.576, 95% CI) per°C 
+confint(dm1a)
+# Proportion of dead zooids increased 0.285 (-0.008 – 0.578, 95% CI) per°C 
 
 # Use predict() with best fit model to predict proportion of zooids dead as a function of temperature
-p.d <- rbind(p.b1,p.b2)
-preds.d <- predict(dm1b, newdata = p.d, se.fit = TRUE)
+p.d <- rbind(p.b1, p.b2)
+preds.d <- predict(dm1a, newdata = p.d, se.fit = TRUE)
 p.d$fit <- preds.d$fit
 p.d$se.fit <- preds.d$se.fit
 
@@ -201,8 +203,8 @@ p.d$logis.upr <- plogis(p.d$upr)
 # Make Figure 3
 
 # Set up window 
-windows(width=4.5,height=4.5) # use "quartz()" on Mac
-par(mfrow = c(2,2),mar=c(3,5,1,1),oma=c(1,0,1,0))
+windows(width = 4.5, height = 4.5) # use "quartz()" on Mac
+par(mfrow = c(2, 2),mar=c(3, 5, 1, 1),oma=c(1, 0, 1, 0))
 
 # Set up figure parameters 
 cex <- .9
@@ -221,89 +223,88 @@ tick_positions <- seq(18, 32, length.out = num_ticks)
 tick_labels <- as.character(round(tick_positions))
 
 # Set limits for axes
-xlims <- c(min(p.t$realized.temp),max(p.t$realized.temp))
-ylims <- c(0,1) 
+xlims <- c(min(p.t$realized.temp), max(p.t$realized.temp))
+ylims <- c(0, 1) 
 
 # a) Colony size (total zooid number)
-with(bug, plot(1, type="n", las = 1,bty = "l", xaxt = "n", xlab="", ylab = "", xlim=xlims, ylim=c(min(total.zooids),max(total.zooids)), cex.axis = cex.axis))
-axis(1, at = tick_positions, labels = rep("",num_ticks), cex.axis = cex.axis)
-text(x = seq(tick_positions[1],tick_positions[8],by =2),
-     y = par("usr")[3] - ((par("usr")[4]-par("usr")[3]) *0.05),
+with(bug, plot(1, type = "n", las = 1,bty = "l", xaxt = "n", xlab = "", ylab = "", xlim = xlims, ylim = c(min(total.zooids), max(total.zooids)), cex.axis = cex.axis))
+axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
+text(x = seq(tick_positions[1], tick_positions[8], by = 2),
+     y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
      labels  = tick_positions,
      xpd =NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
-with(p.t[p.t$batch == 1,],polygon(c(realized.temp,rev(realized.temp)), c(count.lwr,rev(count.upr)), col = adjustcolor("tomato", alpha = .4), border = "NA"))
-with(p.t[p.t$batch == 2,],polygon(c(realized.temp,rev(realized.temp)), c(count.lwr,rev(count.upr)), col = adjustcolor("dodgerblue", alpha = .4), border = "NA"))
-with(t.z[t.z$batch == 1,], points(realized.temp,total.zooids, pch  = 16,col = adjustcolor("tomato", alpha = .4), cex = p.cex))
-with(t.z[t.z$batch == 2,], points(realized.temp,total.zooids, pch  = 16,col = adjustcolor("dodgerblue", alpha = .4), cex = p.cex))
-with(p.t[p.t$batch == 1,], lines(realized.temp,count, lwd = lwd, col = "tomato"))
-with(p.t[p.t$batch == 2,], lines(realized.temp,count, lwd =lwd, col = "dodgerblue"))
-mtext("Colony size \n(number of zooids)",side=2, line = 2.5, adj=0.5,cex=cex, las = 3)
-mtext("a)", side = 3, adj = 0.05, cex =  cex)
-legend("topright", c("Batch 1","Batch 2"), bty="n", pch = rep(16, 2), cex= legend.cex, col = c("tomato","dodgerblue"))
+with(p.t[p.t$batch == 1, ], polygon(c(realized.temp, rev(realized.temp)), c(count.lwr, rev(count.upr)), col = adjustcolor("tomato", alpha = 0.4), border = "NA"))
+with(p.t[p.t$batch == 2, ], polygon(c(realized.temp, rev(realized.temp)), c(count.lwr, rev(count.upr)), col = adjustcolor("dodgerblue", alpha = 0.4), border = "NA"))
+with(t.z[t.z$batch == 1, ], points(realized.temp, total.zooids, pch  = 16, col = adjustcolor("tomato", alpha = 0.4), cex = p.cex))
+with(t.z[t.z$batch == 2, ], points(realized.temp, total.zooids, pch  = 16, col = adjustcolor("dodgerblue", alpha = 0.4), cex = p.cex))
+with(p.t[p.t$batch == 1, ], lines(realized.temp, count, lwd = lwd, col = "tomato"))
+with(p.t[p.t$batch == 2, ], lines(realized.temp, count, lwd = lwd, col = "dodgerblue"))
+mtext("Colony size \n(number of zooids)", side=2, line = 2.5, adj = 0.5, cex = cex, las = 3)
+mtext("a)", side = 3, adj = 0.05, cex = cex)
+legend("topright", c("Batch 1","Batch 2"), bty="n", pch = rep(16, 2), cex = legend.cex, col = c("tomato", "dodgerblue"))
 
 # b) Proportion of zooids capable of feeding
-with(f.z, plot(1, type="n", las = 1,bty = "l", xaxt = "n", xlab="", ylab = "", xlim=xlims, ylim=ylims, cex.axis = cex.axis))
-axis(1, at = tick_positions, labels = rep("",num_ticks), cex.axis = cex.axis)
-text(x = seq(tick_positions[1],tick_positions[8],by =2),
-     y = par("usr")[3] - ((par("usr")[4]-par("usr")[3]) *0.05),
+with(f.z, plot(1, type = "n", las = 1, bty = "l", xaxt = "n", xlab = "", ylab = "", xlim = xlims, ylim = ylims, cex.axis = cex.axis))
+axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
+text(x = seq(tick_positions[1], tick_positions[8], by = 2),
+     y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
      labels  = tick_positions,
      xpd =NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
-with(p.f[p.f$batch == 1,],polygon(c(realized.temp,rev(realized.temp)), c(logis.lwr,rev(logis.upr)), col = adjustcolor("tomato", alpha = .4), border = "NA"))
-with(p.f[p.f$batch == 2,],polygon(c(realized.temp,rev(realized.temp)), c(logis.lwr,rev(logis.upr)), col = adjustcolor("dodgerblue", alpha = .4), border = "NA"))
-with(f.z[f.z$batch == 1,], points(realized.temp,feeding.zooids/total.zooids, pch  = 16,col = adjustcolor("tomato", alpha = .4), cex = p.cex))
-with(f.z[f.z$batch == 2,], points(realized.temp,feeding.zooids/total.zooids, pch  = 16,col = adjustcolor("dodgerblue", alpha = .4), cex = p.cex))
-with(p.f[p.f$batch == 1,], lines(realized.temp,logis, lwd = lwd, col = "tomato"))
-with(p.f[p.f$batch == 2,], lines(realized.temp,logis, lwd =lwd, col = "dodgerblue"))
-mtext("Proportion of \nfeeding zooids",side=2, line = 2.5, adj=0.5,cex=cex, las = 3)
+with(p.f[p.f$batch == 1, ], polygon(c(realized.temp, rev(realized.temp)), c(logis.lwr, rev(logis.upr)), col = adjustcolor("tomato", alpha = 0.4), border = "NA"))
+with(p.f[p.f$batch == 2, ], polygon(c(realized.temp, rev(realized.temp)), c(logis.lwr, rev(logis.upr)), col = adjustcolor("dodgerblue", alpha = 0.4), border = "NA"))
+with(f.z[f.z$batch == 1, ], points(realized.temp, feeding.zooids/total.zooids, pch  = 16,col = adjustcolor("tomato", alpha = 0.4), cex = p.cex))
+with(f.z[f.z$batch == 2, ], points(realized.temp, feeding.zooids/total.zooids, pch  = 16,col = adjustcolor("dodgerblue", alpha = 0.4), cex = p.cex))
+with(p.f[p.f$batch == 1, ], lines(realized.temp, logis, lwd = lwd, col = "tomato"))
+with(p.f[p.f$batch == 2, ], lines(realized.temp, logis, lwd = lwd, col = "dodgerblue"))
+mtext("Proportion of \nfeeding zooids", side = 2, line = 2.5, adj = 0.5,cex = cex, las = 3)
 mtext("b)", side = 3, adj = 0.05, cex =  cex)
-legend("topright", c("Batch 1","Batch 2"), bty="n", pch = rep(16, 2), cex= legend.cex, col = c("tomato","dodgerblue"))
+legend("topright", c("Batch 1", "Batch 2"), bty = "n", pch = rep(16, 2), cex = legend.cex, col = c("tomato", "dodgerblue"))
 
 # c) Proportion of zooids regressed 
-with(r.z, plot(1, type="n", las = 1,bty = "l",xaxt = "n", xlab="", ylab = "", xlim=xlims, ylim=ylims, cex.axis = cex.axis))
-axis(1, at = tick_positions, labels = rep("",num_ticks), cex.axis = cex.axis)
-text(x = seq(tick_positions[1],tick_positions[8],by =2),
-     y = par("usr")[3] - ((par("usr")[4]-par("usr")[3]) *0.05),
+with(r.z, plot(1, type = "n", las = 1,bty = "l",xaxt = "n", xlab = "", ylab = "", xlim = xlims, ylim = ylims, cex.axis = cex.axis))
+axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
+text(x = seq(tick_positions[1], tick_positions[8], by = 2),
+     y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
      labels  = tick_positions,
      xpd =NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
-with(p.r[p.r$batch == 1,],polygon(c(realized.temp,rev(realized.temp)), c(logis.lwr,rev(logis.upr)), col = adjustcolor("tomato", alpha = .4), border = "NA"))
-with(p.r[p.r$batch == 2,],polygon(c(realized.temp,rev(realized.temp)), c(logis.lwr,rev(logis.upr)), col = adjustcolor("dodgerblue", alpha = .4), border = "NA"))
-with(r.z[r.z$batch == 1,], points(realized.temp,regressed.zooids/total.zooids, pch  = 16,col = adjustcolor("tomato", alpha = .4), cex = p.cex))
-with(r.z[r.z$batch == 2,], points(realized.temp,regressed.zooids/total.zooids, pch  = 16,col = adjustcolor("dodgerblue", alpha = .4), cex = p.cex))
-with(p.r[p.r$batch == 1,], lines(realized.temp,logis, lwd = lwd, col = "tomato"))
-with(p.r[p.r$batch == 2,], lines(realized.temp,logis, lwd =lwd, col = "dodgerblue"))
-mtext("Proportion of \nregressed zooids",side=2, line = 2.5, adj=0.5,cex=cex, las = 3)
+with(p.r[p.r$batch == 1, ], polygon(c(realized.temp, rev(realized.temp)), c(logis.lwr,rev(logis.upr)), col = adjustcolor("tomato", alpha = 0.4), border = "NA"))
+with(p.r[p.r$batch == 2, ], polygon(c(realized.temp, rev(realized.temp)), c(logis.lwr,rev(logis.upr)), col = adjustcolor("dodgerblue", alpha = 0.4), border = "NA"))
+with(r.z[r.z$batch == 1, ], points(realized.temp, regressed.zooids/total.zooids, pch  = 16, col = adjustcolor("tomato", alpha = 0.4), cex = p.cex))
+with(r.z[r.z$batch == 2, ], points(realized.temp, regressed.zooids/total.zooids, pch  = 16, col = adjustcolor("dodgerblue", alpha = 0.4), cex = p.cex))
+with(p.r[p.r$batch == 1, ], lines(realized.temp, logis, lwd = lwd, col = "tomato"))
+with(p.r[p.r$batch == 2, ], lines(realized.temp, logis, lwd = lwd, col = "dodgerblue"))
+mtext("Proportion of \nregressed zooids", side = 2, line = 2.5, adj=0.5,cex = cex, las = 3)
 mtext("c)", side = 3, adj = 0.05, cex =  cex)
-legend("topleft", c("Batch 1","Batch 2"), bty="n", pch = rep(16, 2), cex= legend.cex, col = c("tomato","dodgerblue"))
-
+legend("topleft", c("Batch 1", "Batch 2"), bty = "n", pch = rep(16, 2), cex = legend.cex, col = c("tomato", "dodgerblue"))
 
 # d) Proportion of zooids dead
-with(d.z, plot(1, type="n", las = 1,bty = "l",xaxt = "n", xlab="", ylab = "", xlim=xlims, ylim=c(0,0.05), cex.axis = cex.axis))
-axis(1, at = tick_positions, labels = rep("",num_ticks), cex.axis = cex.axis)
-text(x = seq(tick_positions[1],tick_positions[8],by =2),
-     y = par("usr")[3] - ((par("usr")[4]-par("usr")[3]) *0.05),
+with(d.z, plot(1, type = "n", las = 1,bty = "l", xaxt = "n", xlab = "", ylab = "", xlim = xlims, ylim=c(0, 0.05), cex.axis = cex.axis))
+axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
+text(x = seq(tick_positions[1], tick_positions[8], by = 2),
+     y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
      labels  = tick_positions,
      xpd =NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
-with(p.d[p.d$batch == 1,],polygon(c(realized.temp,rev(realized.temp)), c(logis.lwr,rev(logis.upr)), col = adjustcolor("tomato", alpha = .4), border = "NA"))
-with(p.d[p.d$batch == 2,],polygon(c(realized.temp,rev(realized.temp)), c(logis.lwr,rev(logis.upr)), col = adjustcolor("dodgerblue", alpha = .4), border = "NA"))
-with(d.z[d.z$batch == 1,], points(realized.temp,dead.zooids/total.zooids, pch  = 16,col = adjustcolor("tomato", alpha = .4), cex = p.cex))
-with(d.z[d.z$batch == 2,], points(realized.temp,dead.zooids/total.zooids, pch  = 16,col = adjustcolor("dodgerblue", alpha = .4), cex = p.cex))
-with(p.d[p.d$batch == 1,], lines(realized.temp,logis, lwd = lwd, col = "tomato"))
-with(p.d[p.d$batch == 2,], lines(realized.temp,logis, lwd =lwd, col = "dodgerblue"))
-mtext("Proportion of \ndead zooids",side=2, line = 3, adj=0.5,cex=cex, las = 3)
-mtext("d)", side = 3, adj = 0.05, cex =  cex)
-legend("topleft", c("Batch 1","Batch 2"), bty="n", pch = rep(16, 2), cex= legend.cex, col = c("tomato","dodgerblue"))
+with(p.d[p.d$batch == 1, ] ,polygon(c(realized.temp, rev(realized.temp)), c(logis.lwr, rev(logis.upr)), col = adjustcolor("tomato", alpha = 0.4), border = "NA"))
+with(p.d[p.d$batch == 2, ] ,polygon(c(realized.temp, rev(realized.temp)), c(logis.lwr, rev(logis.upr)), col = adjustcolor("dodgerblue", alpha = 0.4), border = "NA"))
+with(d.z[d.z$batch == 1, ], points(realized.temp, dead.zooids/total.zooids, pch  = 16,col = adjustcolor("tomato", alpha = 0.4), cex = p.cex))
+with(d.z[d.z$batch == 2, ], points(realized.temp, dead.zooids/total.zooids, pch  = 16,col = adjustcolor("dodgerblue", alpha = 0.4), cex = p.cex))
+with(p.d[p.d$batch == 1, ], lines(realized.temp, logis, lwd = lwd, col = "tomato"))
+with(p.d[p.d$batch == 2, ], lines(realized.temp, logis, lwd =lwd, col = "dodgerblue"))
+mtext("Proportion of \ndead zooids", side = 2, line = 3, adj = 0.5, cex = cex, las = 3)
+mtext("d)", side = 3, adj = 0.05, cex = cex)
+legend("topleft", c("Batch 1", "Batch 2"), bty = "n", pch = rep(16, 2), cex = legend.cex, col = c("tomato", "dodgerblue"))
 
 # Add x-axis label
 mtext(expression(paste("Temperature (",'\u00B0',"C)")), side = 1, line = 0, cex = cex, outer = TRUE)
