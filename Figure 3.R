@@ -18,6 +18,10 @@ phenos <- read.csv("Phenotypic Data.csv")
 # Subset for bowls with B. neritina present
 bug <- dat[dat$bugula.present == "Y", ]
 
+# Subset data for final data values
+bug <- bug[bug$time == 2,]
+
+
 # Change 'batch' to a factor
 bug$batch <- factor(bug$batch)
 
@@ -28,13 +32,18 @@ bug$regressed.zooids <- phenos[match(bug$bowl.name, phenos$name),
                                which(names(phenos) == "regressed.zooids")]
 bug$dead.zooids <- phenos[match(bug$bowl.name, phenos$name),
                           which(names(phenos) == "dead.zooids")]
-bug$total.zooids <-  with(bug, feeding.zooids + regressed.zooids + dead.zooids)
+bug$total.zooids <- with(bug, feeding.zooids + regressed.zooids + dead.zooids)
 
-# Calculate and add confidence intervals to predicted data frame 
+# Mean of colony size 
+size.mean <- mean(bug$total.zooids)
+
+# Confidence intervals of colony size
+size.se <- sd(bug$total.zooids)/sqrt(length(bug$total.zooids))
+
 z_score <- 2 # Z-score for the 95% confidence interval
 
-# Subset data for final data values
-bug <- bug[bug$time == 2,]
+size.lwr <- size.mean - z_score * size.se
+size.upr <- size.mean + z_score * size.se
 
 # Use aggregate() to create data frames of mean values for total number of zooids and zooids of a given status 
 t.z <- aggregate(total.zooids ~ realized.temp + batch, data = bug, FUN = mean)
@@ -207,11 +216,12 @@ windows(width = 4.5, height = 4.5) # use "quartz()" on Mac
 par(mfrow = c(2, 2),mar=c(3, 5, 1, 1),oma=c(1, 0, 1, 0))
 
 # Set up figure parameters 
-cex <- .9
-cex.axis <- 0.9
+cex <- 1
+cex.axis <- 0.8
 legend.cex <- 0.8
+cex.lab <- 0.7
 lwd <- 3
-p.cex <- 0.8
+p.cex <- 1
 
 # Set the desired number of tick marks for x-axis 
 num_ticks <- 8
@@ -230,9 +240,9 @@ ylims <- c(0, 1)
 with(bug, plot(1, type = "n", las = 1,bty = "l", xaxt = "n", xlab = "", ylab = "", xlim = xlims, ylim = c(min(total.zooids), max(total.zooids)), cex.axis = cex.axis))
 axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
 text(x = seq(tick_positions[1], tick_positions[8], by = 2),
-     y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
+     y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.075),
      labels  = tick_positions,
-     xpd =NA,
+     xpd = NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
@@ -242,17 +252,17 @@ with(t.z[t.z$batch == 1, ], points(realized.temp, total.zooids, pch  = 16, col =
 with(t.z[t.z$batch == 2, ], points(realized.temp, total.zooids, pch  = 16, col = adjustcolor("dodgerblue", alpha = 0.4), cex = p.cex))
 with(p.t[p.t$batch == 1, ], lines(realized.temp, count, lwd = lwd, col = "tomato"))
 with(p.t[p.t$batch == 2, ], lines(realized.temp, count, lwd = lwd, col = "dodgerblue"))
-mtext("Colony size \n(number of zooids)", side=2, line = 2.5, adj = 0.5, cex = cex, las = 3)
-mtext("a)", side = 3, adj = 0.05, cex = cex)
+mtext("Colony size \n(number of zooids)", side = 2, line = 2.5, adj = 0.5, cex = cex.lab, las = 3)
+mtext(bquote(bold("A)")), side = 3, adj = .05, cex =  cex)
 legend("topright", c("Batch 1","Batch 2"), bty="n", pch = rep(16, 2), cex = legend.cex, col = c("tomato", "dodgerblue"))
 
 # b) Proportion of zooids capable of feeding
 with(f.z, plot(1, type = "n", las = 1, bty = "l", xaxt = "n", xlab = "", ylab = "", xlim = xlims, ylim = ylims, cex.axis = cex.axis))
 axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
 text(x = seq(tick_positions[1], tick_positions[8], by = 2),
-     y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
+     y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.075),
      labels  = tick_positions,
-     xpd =NA,
+     xpd = NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
@@ -262,17 +272,17 @@ with(f.z[f.z$batch == 1, ], points(realized.temp, feeding.zooids/total.zooids, p
 with(f.z[f.z$batch == 2, ], points(realized.temp, feeding.zooids/total.zooids, pch  = 16,col = adjustcolor("dodgerblue", alpha = 0.4), cex = p.cex))
 with(p.f[p.f$batch == 1, ], lines(realized.temp, logis, lwd = lwd, col = "tomato"))
 with(p.f[p.f$batch == 2, ], lines(realized.temp, logis, lwd = lwd, col = "dodgerblue"))
-mtext("Proportion of \nfeeding zooids", side = 2, line = 2.5, adj = 0.5,cex = cex, las = 3)
-mtext("b)", side = 3, adj = 0.05, cex =  cex)
+mtext("Proportion of \nfeeding zooids", side = 2, line = 2.5, adj = 0.5,cex = cex.lab, las = 3)
+mtext(bquote(bold("B)")), side = 3, adj = .05, cex =  cex)
 legend("topright", c("Batch 1", "Batch 2"), bty = "n", pch = rep(16, 2), cex = legend.cex, col = c("tomato", "dodgerblue"))
 
 # c) Proportion of zooids regressed 
 with(r.z, plot(1, type = "n", las = 1,bty = "l",xaxt = "n", xlab = "", ylab = "", xlim = xlims, ylim = ylims, cex.axis = cex.axis))
 axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
 text(x = seq(tick_positions[1], tick_positions[8], by = 2),
-     y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
+     y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.075),
      labels  = tick_positions,
-     xpd =NA,
+     xpd = NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
@@ -282,17 +292,17 @@ with(r.z[r.z$batch == 1, ], points(realized.temp, regressed.zooids/total.zooids,
 with(r.z[r.z$batch == 2, ], points(realized.temp, regressed.zooids/total.zooids, pch  = 16, col = adjustcolor("dodgerblue", alpha = 0.4), cex = p.cex))
 with(p.r[p.r$batch == 1, ], lines(realized.temp, logis, lwd = lwd, col = "tomato"))
 with(p.r[p.r$batch == 2, ], lines(realized.temp, logis, lwd = lwd, col = "dodgerblue"))
-mtext("Proportion of \nregressed zooids", side = 2, line = 2.5, adj=0.5,cex = cex, las = 3)
-mtext("c)", side = 3, adj = 0.05, cex =  cex)
+mtext("Proportion of \nregressed zooids", side = 2, line = 2.5, adj = 0.5, cex = cex.lab, las = 3)
+mtext(bquote(bold("C)")), side = 3, adj = .05, cex =  cex)
 legend("topleft", c("Batch 1", "Batch 2"), bty = "n", pch = rep(16, 2), cex = legend.cex, col = c("tomato", "dodgerblue"))
 
 # d) Proportion of zooids dead
 with(d.z, plot(1, type = "n", las = 1,bty = "l", xaxt = "n", xlab = "", ylab = "", xlim = xlims, ylim=c(0, 0.05), cex.axis = cex.axis))
 axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
 text(x = seq(tick_positions[1], tick_positions[8], by = 2),
-     y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
-     labels  = tick_positions,
-     xpd =NA,
+     y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.075),
+     labels = tick_positions,
+     xpd = NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
@@ -302,11 +312,11 @@ with(d.z[d.z$batch == 1, ], points(realized.temp, dead.zooids/total.zooids, pch 
 with(d.z[d.z$batch == 2, ], points(realized.temp, dead.zooids/total.zooids, pch  = 16,col = adjustcolor("dodgerblue", alpha = 0.4), cex = p.cex))
 with(p.d[p.d$batch == 1, ], lines(realized.temp, logis, lwd = lwd, col = "tomato"))
 with(p.d[p.d$batch == 2, ], lines(realized.temp, logis, lwd =lwd, col = "dodgerblue"))
-mtext("Proportion of \ndead zooids", side = 2, line = 3, adj = 0.5, cex = cex, las = 3)
-mtext("d)", side = 3, adj = 0.05, cex = cex)
+mtext("Proportion of \ndead zooids", side = 2, line = 3, adj = 0.5, cex = cex.lab, las = 3)
+mtext(bquote(bold("D)")), side = 3, adj = .05, cex =  cex)
 legend("topleft", c("Batch 1", "Batch 2"), bty = "n", pch = rep(16, 2), cex = legend.cex, col = c("tomato", "dodgerblue"))
 
 # Add x-axis label
-mtext(expression(paste("Temperature (",'\u00B0',"C)")), side = 1, line = 0, cex = cex, outer = TRUE)
+mtext(expression(paste("Temperature (",'\u00B0',"C)")), side = 1, line = -0.5, cex = cex.lab, outer = TRUE)
 
 

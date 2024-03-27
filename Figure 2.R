@@ -212,15 +212,16 @@ p.f$upr <- p.f$fit + z_score * preds.f$se.fit
 # Make Figure 2
 
 # Set up window
-windows(width = 9,height = 3) # use "quartz()" on Mac
-par(mfrow = c(1, 3),mar=c(5, 8, 1, 1), oma = c(1, 0, 1, 0))
+windows(width = 7, height = 2.33) # use "quartz()" on Mac
+par(mfrow = c(1, 3),mar=c(3, 6, 1, 1),oma=c(1, 0, 1, 0))
 
 # Set up figure parameters
-cex <- 1.2
-cex.axis <- 1.4
-legend.cex <- 1.4
+cex <- 1
+cex.axis <- 1
+legend.cex <- 1
+cex.lab <- .7
 lwd <- 3
-p.cex <- 1.3
+p.cex <- 1
 
 # Set the desired number of tick marks for x-axis 
 num_ticks <- 8
@@ -241,7 +242,7 @@ axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
 text(x = seq(tick_positions[1], tick_positions[8], by = 2),
      y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
      labels  = tick_positions,
-     xpd =NA,
+     xpd = NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
@@ -251,9 +252,9 @@ with(fr.c[fr.c$batch == 1, ], points(realized.temp,feeding.rate.per.colony, pch 
 with(fr.c[fr.c$batch == 2, ], points(realized.temp,feeding.rate.per.colony, pch  = 16, cex = p.cex, col = adjustcolor("dodgerblue", alpha = 0.4)))
 with(p.c[p.c$batch == 1, ], lines(realized.temp,fit, lwd = lwd, col = "tomato"))
 with(p.c[p.c$batch == 2, ], lines(realized.temp,fit, lwd = lwd, col = "dodgerblue"))
-mtext("Clearance rate per colony", side = 2, line = 5, adj = 0.5,cex = cex, las = 3)
-mtext(expression(paste("(ml"," ", "day"^"-1", "colony"^"-1",")")), side = 2, line = 3, adj=0.5,cex = cex, las = 3)
-mtext("a)", side = 3, adj = 0.05, cex =  cex)
+mtext("Clearance rate per colony", side = 2, line = 4, adj = 0.5, cex = cex.lab, las = 3)
+mtext(expression(paste("(ml"," ", "day"^"-1", "colony"^"-1",")")), side = 2, line = 2.5, adj = 0.5, cex = cex.lab, las = 3)
+mtext(bquote(bold("A)")), side = 3, adj = .05, cex =  cex)
 legend("topleft", c("Batch 1", "Batch 2"), bty = "n", pch = rep(16, 2), cex = legend.cex, col = c("tomato", "dodgerblue"))
 
 # b) Per zooid clearance rate
@@ -263,7 +264,7 @@ axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
 text(x = seq(tick_positions[1], tick_positions[8], by = 2),
      y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
      labels  = tick_positions,
-     xpd =NA,
+     xpd = NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
@@ -273,9 +274,9 @@ with(fr.z[fr.z$batch == 1, ], points(realized.temp, feeding.rate.per.zooid, pch 
 with(fr.z[fr.z$batch == 2, ], points(realized.temp, feeding.rate.per.zooid, pch  = 16, cex = p.cex, col = adjustcolor("dodgerblue", alpha = 0.4)))
 with(p.z[p.z$batch == 1, ], lines(realized.temp, fit, lwd = lwd, col = "tomato"))
 with(p.z[p.z$batch == 2, ], lines(realized.temp, fit, lwd = lwd, col = "dodgerblue"))
-mtext("Clearance rate per zooid", side = 2, line = 5, adj = 0.5, cex = cex, las = 3)
-mtext(expression(paste(" (ml"," ", "day"^"-1", "zooid"^"-1",")")), side = 2, line = 3, adj=0.5, cex = cex, las = 3)
-mtext("b)", side = 3, adj = 0.05, cex = cex)
+mtext("Clearance rate per zooid", side = 2, line = 3.5, adj = 0.5, cex = cex.lab, las = 3)
+mtext(expression(paste(" (ml"," ", "day"^"-1", "zooid"^"-1",")")), side = 2, line = 2, adj = 0.5, cex = cex.lab, las = 3)
+mtext(bquote(bold("B)")), side = 3, adj = .05, cex = cex)
 legend("topleft", c("Batch 1", "Batch 2"), bty = "n", pch = rep(16, 2), cex = legend.cex, col = c("tomato", "dodgerblue"))
 
 # c) Per feeding zooid clearance rate
@@ -285,7 +286,7 @@ axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
 text(x = seq(tick_positions[1], tick_positions[8], by = 2),
      y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
      labels  = tick_positions,
-     xpd =NA,
+     xpd = NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
@@ -295,13 +296,12 @@ with(fr.f[fr.f$batch == 1, ], points(realized.temp, feeding.rate.per.feedingzooi
 with(fr.f[fr.f$batch == 2, ], points(realized.temp, feeding.rate.per.feedingzooid, pch  = 16, cex = p.cex, col = adjustcolor("dodgerblue", alpha = 0.4)))
 with(p.f[p.f$batch == 1, ], lines(realized.temp,fit, lwd = lwd, col = "tomato"))
 with(p.f[p.f$batch == 2, ], lines(realized.temp,fit, lwd = lwd, col = "dodgerblue"))
-mtext("Clearance rate", side = 2, line = 6.5, cex = cex, las = 3)
-mtext("per feeding zooid", side = 2, line = 4.5, cex = cex, las = 3)
-mtext(expression(paste(" (ml"," ", "day"^"-1", "feeding zooid"^"-1",")")), side = 2, line = 2.5, adj = 0.5,cex = cex, las = 3)
-
-mtext("c)", side = 3, adj = 0.05, cex =  cex)
+mtext("Clearance rate", side = 2, line = 4.5, cex = cex.lab, las = 3)
+mtext("per feeding zooid", side = 2, line = 3.5, cex = cex.lab, las = 3)
+mtext(expression(paste(" (ml"," ", "day"^"-1", "feeding zooid"^"-1",")")), side = 2, line = 2, adj = 0.5, cex = cex.lab, las = 3)
+mtext(bquote(bold("C)")), side = 3, adj = .05, cex =  cex)
 legend("topleft", c("Batch 1","Batch 2"), bty="n", pch = rep(16, 2), cex= legend.cex, col = c("tomato","dodgerblue"))
 
 # Add x-axis label
-mtext(expression(paste("Temperature (",'\u00B0',"C)")), side = 1, line = -0.5, cex = cex, outer = TRUE)
+mtext(expression(paste("Temperature (",'\u00B0',"C)")), side = 1, line = -0.5, cex = cex.lab, outer = TRUE)
 

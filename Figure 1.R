@@ -20,6 +20,23 @@ dat$cells.per.ml <- dat$cells.per.ul * 1000
 # Subset data by absence of B. neritina
 alg <- dat[dat$bugula.present == "N", ]
 
+# Mean values of starting concentrations
+mean.b1 <- mean(alg[alg$batch == 1 & alg$time == 0,]$cells.per.ml)
+mean.b2 <- mean(alg[alg$batch == 2 & alg$time == 0,]$cells.per.ml)
+
+# Confidence intervals of starting concentrations
+se.b1 <- sd(alg[alg$batch == 1 & alg$time == 0,]$cells.per.ml)/sqrt(length(alg[alg$batch == 1 & alg$time == 0,]$cells.per.ml))
+se.b2 <- sd(alg[alg$batch == 2 & alg$time == 0,]$cells.per.ml)/sqrt(length(alg[alg$batch == 2 & alg$time == 0,]$cells.per.ml))
+
+z_score <- 2 # Z-score for the 95% confidence interval
+
+b1.lwr <- mean.b1 - z_score * se.b1
+b1.upr <- mean.b1 + z_score * se.b1
+
+b2.lwr <- mean.b2 - z_score * se.b2
+b2.upr <- mean.b2 + z_score * se.b2
+
+
 # Create data frame for rate of change in algal characteristics to be added to
 name_vec <- unique(alg$bowl.name)
 alg.rates <- alg[alg$time == 0, ] %>% select("bowl.name","tankID","target.temp","realized.temp","batch") 
@@ -100,7 +117,6 @@ p$fit <- preds$fit
 p$se.fit <- preds$se.fit
 
 # Calculate and add confidence intervals to predicted data frame 
-z_score <- 2 # Z-score for the 95% confidence interval
 p$lwr <- p$fit - z_score * preds$se.fit
 p$upr <- p$fit + z_score * preds$se.fit
 
@@ -171,15 +187,16 @@ p.s$upr <- p.s$fit + z_score * preds.s$se.fit
 # Make Figure 1
 
 # Set up Window 
-windows(width=9, height=3) # use "quartz()" on Mac
-par(mfrow = c(1, 3),mar=c(5, 8, 1, 1),oma=c(1, 0, 1, 0))
+windows(width = 7, height = 2.33) # use "quartz()" on Mac
+par(mfrow = c(1, 3),mar=c(3, 6, 1, 1),oma=c(1, 0, 1, 0))
 
 # Set up figure parameters
-cex <- 1.2
-cex.axis <- 1.4
-legend.cex <- 1.4
+cex <- 1
+cex.axis <- 1
+legend.cex <- 1
+cex.lab <- 0.7
 lwd <- 3
-p.cex <- 1.3
+p.cex <- 1
 
 # Set the desired number of tick marks for x-axis 
 num_ticks <- 8
@@ -199,7 +216,7 @@ axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
 text(x = seq(tick_positions[1],tick_positions[8], by = 2),
      y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) *0.05),
      labels = tick_positions,
-     xpd =NA,
+     xpd = NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
@@ -209,8 +226,8 @@ with(growth[growth$batch == 1, ], points(realized.temp, r, pch = 16, col = adjus
 with(growth[growth$batch == 2, ], points(realized.temp, r, pch = 16,col = adjustcolor("dodgerblue", alpha = 0.4), cex = p.cex))
 with(p[p$batch == 1, ], lines(realized.temp, fit, lwd = lwd, col = "tomato"))
 with(p[p$batch == 2, ], lines(realized.temp, fit, lwd = lwd, col = "dodgerblue"))
-mtext("Rate of change in \nalgal concentration", side = 2, line = 3, cex = cex, las = 3)
-mtext("a)", side = 3, adj = 0.05, cex = cex)
+mtext("Rate of change in \nalgal concentration", side = 2, line = 3, cex = cex.lab, las = 3)
+mtext(bquote(bold("A)")), side = 3, adj = .05, cex =  cex)
 legend("topright", c("Batch 1", "Batch 2"), bty = "n", pch = rep(16, 2), cex = legend.cex, col = c("tomato", "dodgerblue"))
 
 
@@ -220,7 +237,7 @@ axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
 text(x = seq(tick_positions[1], tick_positions[8], by = 2),
      y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
      labels = tick_positions,
-     xpd =NA,
+     xpd = NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
@@ -230,8 +247,8 @@ with(fsc.change[fsc.change$batch == 1, ], points(realized.temp, fsc.diff, pch  =
 with(fsc.change[fsc.change$batch == 2, ], points(realized.temp, fsc.diff, pch  = 16, col = adjustcolor("dodgerblue", alpha = 0.4), cex = p.cex))
 with(p.f[p.f$batch == 1, ], lines(realized.temp,fit, lwd = lwd, col = "tomato"))
 with(p.f[p.f$batch == 2, ], lines(realized.temp,fit, lwd = lwd, col = "dodgerblue"))
-mtext("Rate of change in size", side = 2, line = 4.5, cex = cex, las = 3)
-mtext("b)", side = 3, adj = 0.05, cex = cex)
+mtext("Rate of change in size", side = 2, line = 4, cex = cex.lab, las = 3)
+mtext(bquote(bold("B)")), side = 3, adj = .05, cex =  cex)
 legend("topleft", c("Batch 1", "Batch 2"), bty = "n", pch = rep(16, 2), cex = legend.cex, col = c("tomato","dodgerblue"))
 
 # c)  Rate of change in algal cell internal complexity
@@ -240,20 +257,19 @@ axis(1, at = tick_positions, labels = rep("", num_ticks), cex.axis = cex.axis)
 text(x = seq(tick_positions[1], tick_positions[8], by = 2),
      y = par("usr")[3] - ((par("usr")[4] - par("usr")[3]) * 0.05),
      labels = tick_positions,
-     xpd =NA,
+     xpd = NA,
      srt = 60,
      cex = cex.axis,
      adj = 1)
-
 with(p.s[p.s$batch == 1, ], polygon(c(realized.temp, rev(realized.temp)), c(lwr,rev(upr)), col = adjustcolor("tomato", alpha = 0.4), border = "NA"))
 with(p.s[p.s$batch == 2, ], polygon(c(realized.temp, rev(realized.temp)), c(lwr,rev(upr)), col = adjustcolor("dodgerblue", alpha = 0.4), border = "NA"))
 with(ssc.change[ssc.change$batch == 1, ], points(realized.temp, ssc.diff, pch  = 16, col = adjustcolor("tomato", alpha = 0.4), cex = p.cex))
 with(ssc.change[ssc.change$batch == 2, ], points(realized.temp, ssc.diff, pch  = 16, col = adjustcolor("dodgerblue", alpha = 0.4), cex = p.cex))
 with(p.s[p.s$batch == 1, ], lines(realized.temp, fit, lwd = lwd, col = "tomato"))
 with(p.s[p.s$batch == 2, ], lines(realized.temp, fit, lwd = lwd, col = "dodgerblue"))
-mtext("Rate of change in \ninternal complexity", side = 2, line = 4.5, cex = cex, las = 3)
-mtext("c)", side = 3, adj = 0.05, cex = cex)
+mtext("Rate of change in \ninternal complexity", side = 2, line = 4, cex = cex.lab, las = 3)
+mtext(bquote(bold("C)")), side = 3, adj = .05, cex =  cex)
 legend("topleft", c("Batch 1", "Batch 2"), bty = "n", pch = rep(16, 2), cex = legend.cex, col = c("tomato", "dodgerblue"))
 
 # X-axis title
-mtext(expression(paste("Temperature (",'\u00B0',"C)")), side = 1, line = -0.5, cex = cex, outer = TRUE)
+mtext(expression(paste("Temperature (",'\u00B0',"C)")), side = 1, line = -0.5, cex = cex.lab, outer = TRUE)
